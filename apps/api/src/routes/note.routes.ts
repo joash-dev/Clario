@@ -66,6 +66,21 @@ router.post(
   })
 );
 
+router.post(
+  "/:id/tasks",
+  asyncHandler(async (req, res) => {
+    if (req.userId === undefined) {
+      throw new HttpError(401, "Unauthorized", "UNAUTHORIZED");
+    }
+    const params = idParamSchema.safeParse(req.params);
+    if (!params.success) {
+      throw new HttpError(400, params.error.issues[0]?.message ?? "Invalid id", "VALIDATION_ERROR");
+    }
+    const result = await noteService.suggestTasksFromNote(req.userId, params.data.id);
+    res.status(200).json(result);
+  })
+);
+
 router.get(
   "/",
   asyncHandler(async (req, res) => {

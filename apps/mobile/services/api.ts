@@ -177,9 +177,67 @@ export async function getTaskRequest(id: string): Promise<TaskDTO> {
 export async function listNotesRequest(params: {
   page?: number;
   limit?: number;
+  sortBy?: string;
+  order?: "asc" | "desc";
 }): Promise<{ data: NoteDTO[]; meta: ListMeta }> {
   const { data } = await api.get<{ data: NoteDTO[]; meta: ListMeta }>("/notes", {
     params,
   });
+  return data;
+}
+
+export async function getNoteRequest(id: string): Promise<NoteDTO> {
+  const { data } = await api.get<{ note: NoteDTO }>(`/notes/${id}`);
+  return data.note;
+}
+
+export async function createNoteRequest(payload: {
+  title?: string | null;
+  content: string;
+}): Promise<NoteDTO> {
+  const { data } = await api.post<{ note: NoteDTO }>("/notes", payload);
+  return data.note;
+}
+
+export async function patchNoteRequest(
+  id: string,
+  body: { title?: string | null; content?: string }
+): Promise<NoteDTO> {
+  const { data } = await api.patch<{ note: NoteDTO }>(`/notes/${id}`, body);
+  return data.note;
+}
+
+export async function deleteNoteRequest(id: string): Promise<void> {
+  await api.delete(`/notes/${id}`);
+}
+
+export async function summarizeNoteRequest(id: string): Promise<{ summary: string }> {
+  const { data } = await api.post<{ summary: string }>(`/notes/${id}/summarize`, {});
+  return data;
+}
+
+export type SuggestedTaskFromNote = {
+  title: string;
+  priority?: TaskPriority;
+  description?: string | null;
+};
+
+export async function suggestTasksFromNoteRequest(
+  id: string
+): Promise<{ tasks: SuggestedTaskFromNote[] }> {
+  const { data } = await api.post<{ tasks: SuggestedTaskFromNote[] }>(
+    `/notes/${id}/tasks`,
+    {}
+  );
+  return data;
+}
+
+export type ChatHistoryTurn = { role: "user" | "assistant"; content: string };
+
+export async function chatRequest(payload: {
+  message: string;
+  conversationHistory: ChatHistoryTurn[];
+}): Promise<{ reply: string }> {
+  const { data } = await api.post<{ reply: string }>("/ai/chat", payload);
   return data;
 }

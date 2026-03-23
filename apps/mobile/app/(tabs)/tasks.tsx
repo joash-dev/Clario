@@ -8,6 +8,7 @@ import {
 import { DMSerifDisplay_400Regular } from "@expo-google-fonts/dm-serif-display";
 import { useFocusEffect } from "@react-navigation/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import * as Haptics from "expo-haptics";
 import { useFonts } from "expo-font";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -125,47 +126,38 @@ function TaskCheckbox({
   status: TaskStatus;
   onPress: () => void;
 }) {
+  const fire = () => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onPress();
+  };
   if (status === "DONE") {
     return (
       <Pressable
-        onPress={onPress}
+        onPress={fire}
         style={[styles.checkboxBase, styles.checkboxDone]}
         accessibilityRole="button"
         accessibilityLabel="Mark task not done"
       >
-        <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+        <Ionicons name="checkmark" size={14} color="#FFFFFF" />
       </Pressable>
     );
   }
   if (status === "IN_PROGRESS") {
     return (
       <Pressable
-        onPress={onPress}
-        style={[
-          styles.checkboxBase,
-          { borderColor: accent, borderWidth: 2, alignItems: "center", justifyContent: "center" },
-        ]}
+        onPress={fire}
+        style={[styles.checkboxBase, styles.checkboxProgressOuter]}
         accessibilityRole="button"
         accessibilityLabel="Advance task status"
       >
-        <View
-          style={{
-            width: 12,
-            height: 12,
-            borderRadius: 6,
-            backgroundColor: accent,
-          }}
-        />
+        <View style={styles.checkboxProgressInner} />
       </Pressable>
     );
   }
   return (
     <Pressable
-      onPress={onPress}
-      style={[
-        styles.checkboxBase,
-        { borderColor: "#CCCCCC", borderWidth: 2 },
-      ]}
+      onPress={fire}
+      style={[styles.checkboxBase, styles.checkboxTodo]}
       accessibilityRole="button"
       accessibilityLabel="Start task"
     />
@@ -432,7 +424,7 @@ export default function TasksScreen() {
             <View style={styles.taskCenter}>
               <Text
                 style={[styles.taskTitle, done && styles.taskTitleDone]}
-                numberOfLines={2}
+                numberOfLines={1}
               >
                 {item.title}
               </Text>
@@ -548,10 +540,7 @@ export default function TasksScreen() {
           keyExtractor={(item) => item.id}
           renderItem={renderTask}
           ListHeaderComponent={listHeader}
-          contentContainerStyle={[
-            styles.listContent,
-            { paddingBottom: 100 + insets.bottom },
-          ]}
+          contentContainerStyle={[styles.listContent, { paddingRight: 80 }]}
           ListEmptyComponent={
             !loadError ? (
               <View style={styles.emptyWrap}>
@@ -888,7 +877,8 @@ const styles = StyleSheet.create({
     backgroundColor: cardBg,
     borderRadius: 14,
     paddingVertical: 14,
-    paddingHorizontal: 16,
+    paddingLeft: 16,
+    paddingRight: 16,
     marginBottom: 10,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: "#F0F0EE",
@@ -908,16 +898,36 @@ const styles = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: 13,
-    marginRight: 12,
+  },
+  checkboxTodo: {
+    borderWidth: 2,
+    borderColor: "#CCCCCC",
+    backgroundColor: "transparent",
+  },
+  checkboxProgressOuter: {
+    borderWidth: 2,
+    borderColor: accent,
+    backgroundColor: "transparent",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  checkboxProgressInner: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: accent,
   },
   checkboxDone: {
     backgroundColor: accent,
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 0,
   },
   taskCenter: {
     flex: 1,
     minWidth: 0,
+    marginLeft: 10,
+    overflow: "hidden",
   },
   taskTitle: {
     fontFamily: FF.sansMedium,

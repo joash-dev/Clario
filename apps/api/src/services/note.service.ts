@@ -140,3 +140,29 @@ export async function summarizeNoteForUser(userId: string, noteId: string): Prom
 
   return { summary };
 }
+
+export type SuggestedTaskItem = {
+  title: string;
+  priority: "LOW" | "MEDIUM" | "HIGH";
+  description: string | null;
+};
+
+export async function suggestTasksFromNote(
+  userId: string,
+  noteId: string
+): Promise<{ tasks: SuggestedTaskItem[] }> {
+  const note = await prisma.note.findFirst({
+    where: { id: noteId, userId },
+    select: { id: true, content: true },
+  });
+  if (!note) notFound();
+
+  const suggestions = await aiService.suggestTasks(note.content);
+  return {
+    tasks: suggestions.map((title) => ({
+      title: title.length > 500 ? `${title.slice(0, 497)}…` : title,
+      priority: "MEDIUM" as const,
+      description: null,
+    })),
+  };
+}

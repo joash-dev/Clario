@@ -21,7 +21,8 @@ const envSchema = z
     OPENAI_API_KEY: z.string().optional(),
     OPENAI_MODEL: z.string().min(1).default("gpt-4o-mini"),
     GEMINI_API_KEY: z.string().optional(),
-    GEMINI_MODEL: z.string().min(1).default("gemini-1.5-flash"),
+    /** Stable model id — see https://ai.google.dev/gemini-api/docs/models/gemini */
+    GEMINI_MODEL: z.string().min(1).default("gemini-2.5-flash"),
   })
   .superRefine((data, ctx) => {
     const openaiKey = (data.OPENAI_API_KEY ?? "").trim();

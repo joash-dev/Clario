@@ -8,3 +8,11 @@
  */
 export const API_BASE_URL =
   process.env.EXPO_PUBLIC_API_BASE_URL?.trim() || "http://localhost:3000/api/v1";
+
+/** Shown on Profile (optional `EXPO_PUBLIC_AI_PROVIDER=openai|gemini`, defaults to Gemini). */
+export type DisplayAiProvider = "Gemini" | "OpenAI";
+
+export const DISPLAY_AI_PROVIDER_LABEL: DisplayAiProvider =
+  process.env.EXPO_PUBLIC_AI_PROVIDER?.toLowerCase() === "openai" ? "OpenAI" : "Gemini";
+
+export const APP_VERSION = "1.0.0";

@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
+import { chat as chatController } from "../controllers/ai.controller";
 import { HttpError } from "../middleware/errorHandler";
 import { authenticate } from "../middleware/auth.middleware";
 import * as aiService from "../services/ai.service";
@@ -42,5 +43,7 @@ router.post(
     res.status(200).json({ suggestions });
   })
 );
+
+router.post("/chat", asyncHandler(chatController));
 
 export { router as aiRouter };

@@ -122,17 +122,21 @@ function priorityStyle(p: TaskDTO["priority"]) {
   }
 }
 
-function statusDotColor(status: TaskDTO["status"]): string {
-  switch (status) {
-    case "TODO":
-      return "#9CA3AF";
-    case "IN_PROGRESS":
-      return accent;
-    case "DONE":
-      return "#4A7C59";
-    default:
-      return "#9CA3AF";
+function cleanTaskTitleDisplay(title: string): string {
+  return title
+    .replace(/['"]/g, "")
+    .replace(/,\s*$/, "")
+    .trim();
+}
+
+function TaskStatusIndicator({ status }: { status: TaskDTO["status"] }) {
+  if (status === "TODO") {
+    return <View style={styles.statusTodo} />;
   }
+  if (status === "IN_PROGRESS") {
+    return <View style={styles.statusInProgress} />;
+  }
+  return <View style={styles.statusDone} />;
 }
 
 export default function DashboardScreen() {
@@ -199,7 +203,8 @@ export default function DashboardScreen() {
         ]);
         setTasks(tRes.data);
         setNotes(nRes.data);
-        setNotesTotal(nRes.meta.total);
+        const metaTotal = nRes.meta?.total;
+        setNotesTotal(typeof metaTotal === "number" ? metaTotal : nRes.data.length);
       } catch (e) {
         setLoadError(getApiErrorMessage(e));
         setTasks((t) => (t === null ? [] : t));
@@ -228,7 +233,15 @@ export default function DashboardScreen() {
     return tasks.filter((t) => isDueToday(t.dueAt));
   }, [tasks]);
 
-  const tasksTodayCount = tasksDueToday.length;
+  const tasksTodayCount = useMemo(() => {
+    if (!tasks) return 0;
+    const hasAnyDueDate = tasks.some((t) => Boolean(t.dueAt));
+    const dueTodayN = tasks.filter((t) => isDueToday(t.dueAt)).length;
+    if (!hasAnyDueDate) {
+      return tasks.filter((t) => t.status !== "DONE").length;
+    }
+    return dueTodayN;
+  }, [tasks]);
 
   const displayTasks = useMemo(() => {
     if (!tasks) return [];
@@ -266,7 +279,7 @@ export default function DashboardScreen() {
             styles.scrollInner,
             {
               paddingTop: 16,
-              paddingBottom: 100,
+              paddingRight: 80,
             },
           ]}
           showsVerticalScrollIndicator={false}
@@ -372,12 +385,7 @@ export default function DashboardScreen() {
                     })
                   }
                 >
-                  <View
-                    style={[
-                      styles.statusDot,
-                      { backgroundColor: statusDotColor(task.status) },
-                    ]}
-                  />
+                  <TaskStatusIndicator status={task.status} />
                   <View style={styles.taskMain}>
                     <Text
                       style={[
@@ -386,7 +394,7 @@ export default function DashboardScreen() {
                       ]}
                       numberOfLines={1}
                     >
-                      {task.title}
+                      {cleanTaskTitleDisplay(task.title)}
                     </Text>
                   </View>
                   <View
@@ -723,16 +731,31 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderWidth: 1,
     borderColor: borderSoft,
-    gap: 10,
   },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  statusTodo: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    borderWidth: 1.5,
+    borderColor: "#CCCCCC",
+    backgroundColor: "transparent",
+  },
+  statusInProgress: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: accent,
+  },
+  statusDone: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#22C55E",
   },
   taskMain: {
     flex: 1,
     minWidth: 0,
+    marginLeft: 8,
   },
   taskTitle: {
     fontFamily: FF.sansMedium,
@@ -777,7 +800,7 @@ const styles = StyleSheet.create({
   outlineBtn: {
     alignSelf: "center",
     paddingVertical: 12,
-    paddingHorizontal: 28,
+    paddingHorizontal: 32,
     borderRadius: 12,
     borderWidth: 1.5,
     borderColor: accent,
